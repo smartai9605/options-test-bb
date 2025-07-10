@@ -27,7 +27,7 @@ def init_mongodb():
         
         # Check if db_option database exists
         db_list = client.list_database_names()
-        if 'db_option' not in db_list:
+        if 'db_option_test' not in db_list:
             print("Creating db_option database...")
             # Create the database by inserting a document
             client['db_option'].create_collection('init')
@@ -129,14 +129,14 @@ def get_option_details(optionSymbol):
     print(response.text)
     return response.json()
 
-@app.route('/api/buyOrder', methods=['POST'])
-def buy_order():
-    data = request.get_json()
-    symbol = data['symbol']
-    side = data['side']
-    strategyName = data['strategyName']
-    price = data['price']
-    quantity = data['quantity']
+# @app.route('/api/buyOrder', methods=['POST'])
+def buy_order(symbol, side, strategyName, price, quantity):
+    # data = request.get_json()
+    # symbol = data['symbol']
+    # side = data['side']
+    # strategyName = data['strategyName']
+    # price = data['price']
+    # quantity = data['quantity']
 
     api_key = os.getenv('API_KEY')
     api_secret = os.getenv('SECREAT_KEY')
@@ -218,17 +218,17 @@ def buy_order():
 
     return jsonify({
         "message": "Buy order received successfully",
-        "received_data": data,
+        "received_data": symbol,
         "status": "success"
     })
 
-@app.route('/api/sellOrder', methods=['POST'])
-def sell_order():
-    data = request.get_json()
-    symbol = data['symbol']
-    side = data['side']
-    strategyName = data['strategyName']
-    price = data['price']
+# @app.route('/api/sellOrder', methods=['POST'])
+def sell_order(symbol, side, strategyName, price):
+    # data = request.get_json()
+    # symbol = data['symbol']
+    # side = data['side']
+    # strategyName = data['strategyName']
+    # price = data['price']
 
     order = db.orders.find_one({
         "symbol": symbol,
@@ -289,9 +289,29 @@ def sell_order():
 
     return jsonify({
         "message": "Sell order received successfully",
-        "received_data": data,
+        "received_data": symbol,
         "status": "success"
     })
+
+@app.route('/api/signal' , methods=['POST'])
+def signal():
+    data = request.get_json()
+    symbol = data['symbol']
+    side = data['side']
+    strategyName = data['strategyName']
+    price = data['price']
+    quantity = data['quantity']
+
+    api_key = os.getenv('API_KEY')
+    api_secret = os.getenv('SECREAT_KEY')
+    # Convert price to float for calculations
+    
+    if side == 'buy':
+        result = buy_order(symbol, side, strategyName, price, quantity)
+        return result
+    elif side == 'sell':
+        result = sell_order(symbol, side, strategyName, price)
+        return result
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
